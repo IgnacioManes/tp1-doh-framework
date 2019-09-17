@@ -10,6 +10,31 @@ servers:
 
 # Paths servidos por la aplicación
 paths:
+
+  /domains/{domain_name}:
+    get:
+      operationId: "api.domains.get_one"
+      tags:
+        - "Domains"
+      summary: "Alumno de la materia"
+      description: "Obtiene una ip relacionada a un dominio particular especificando si es o no custom"
+      parameters:
+        - in: path
+          name: domain_name
+          required: true
+          schema:
+            type: string
+          description: Nombre del dominio a obtener
+      responses:
+        200:
+          description: "Operación de lectura exitosa"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Domain'
+        404:
+          description: "Dominio no encontrado"
+
   /custom-domains:
     get:
       operationId: "api.domains.get"
@@ -30,9 +55,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Domain'
+                $ref: '#/components/schemas/Domain_array'
         404:
           description: "Dominio no encontrado"
     post:
@@ -57,6 +80,25 @@ paths:
                 $ref: '#/components/schemas/Domain'
         400:
           description: "Dominio duplicado"
+    put:
+      operationId: "api.domains.edit"
+      tags:
+        - "Domains"
+      summary: "Modificar dominio personalizado"
+      description: "modifica un dominio personalizado"
+      requestBody:
+        required: true
+        x-body-name: 'dominio'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputDomain'
+      responses:
+        200:
+          description: "Se ha modificado el dominio exitosamente"
+        404:
+          description: "Dominio no encontrado"
+  /custom-domains/{domain_name}:
     delete:
       operationId: "api.domains.delete"
       tags:
@@ -71,54 +113,20 @@ paths:
             type: string
           description: Nombre del dominio a borrar
       responses:
-        204:
-          description: "Operación de lectura exitosa"
-        404:
-          description: "Dominio no encontrado"
-    put:
-      operationId: "api.domains.edit"
-      tags:
-        - "Domains"
-      summary: "Modificar dominio personalizado"
-      description: "modifica un dominio personalizado"
-      parameters:
-        - in: path
-          name: domain_name
-          required: true
-          schema:
-            type: string
-          description: Nombre del dominio a borrar
-      responses:
-        204:
-          description: "Operación de lectura exitosa"
-        404:
-          description: "Dominio no encontrado"
-  /domains/{domain_name}:
-    get:
-      operationId: "api.domains.get_one"
-      tags:
-        - "Domains"
-      summary: "Alumno de la materia"
-      description: "Obtiene una ip relacionada a un dominio particular especificando si es o no custom"
-      parameters:
-        - in: path
-          name: domain_name
-          required: true
-          schema:
-            type: integer
-          description: Nombre del dominio a obtener
-      responses:
         200:
-          description: "Operación de lectura exitosa"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Domain'
+          description: "Operación de borrado exitosa"
         404:
           description: "Dominio no encontrado"
 # Declaración de tipos de datos
 components:
   schemas:
+    Domain_array:
+      type: "object"
+      properties:
+        items:
+          type: "array"
+          items:
+            $ref: '#/components/schemas/Domain'
     Domain:
       type: "object"
       properties:

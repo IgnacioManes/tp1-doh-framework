@@ -2,5 +2,5 @@ import dns.resolver
 
 # Resolve www.yahoo.com
 result = dns.resolver.query('www.yahoo.com')
-for answer in result.response.answer:
-    print(answer)
+ips = [{"ip" : ip.address ,"custom" : False} for ip in result]
+print(ips)

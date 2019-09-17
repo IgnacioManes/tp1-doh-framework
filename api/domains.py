@@ -4,92 +4,140 @@ import dns.resolver
 # Data to serve with our API
 custom_domains = {
     1: {
-        'domain': 'custom.fi.una.ar',
+        'domain': 'custom.fi.uba.ar',
         'ip': '1.1.1.1'
     },
 }
 
-# Create a handler for our read (GET) people
-def get(q):
+rr_dict = {}
+
+# Create a handler for our read (GET) domains
+def get(q=""):
     """
     Esta funcion maneja el request GET /api/custom-domains/?q={query}
 
-    :id_alumno body:  id del alumno que se quiere borrar
-    :return:        200 alumno, 404 alumno no encontrado
+     :q path:  palabra clave a buscar en los dominios
+    :return:        200 dominios que cumplan con la query, 404 dominio no encontrado
     """
-    # Create the list of people from our data
-    return domains
+    # Create the list of domains from our data
+    domains = {}
+    domains["items"] = []
+    if q != "":
+        for domain in custom_domains.values():
+            if q in domain["domain"]:
+                domain["custom"] = True
+                domains["items"].append(domain)
+    else:
+        for domain in custom_domains.values():
+            domain["custom"] = True
+            domains["items"].append(domain)
+    return make_response(domains, 200)
+
 
 def get_one(domain_name):
     """
     Esta funcion maneja el request GET /api/domain/{domain_name}
 
-     :domain_name body:  nombre del dominio a obtener
+     :domain_name path:  nombre del dominio a obtener
     :return:        200 dominio, 404 dominio no encontrado
     """
     domains = []
-    for domain in custom_domains:
+    for domain in custom_domains.values():
         if domain['domain'] == domain_name:
-            domains.append(domain)
-    result = dns.resolver.query('www.yahoo.com')
-    domains += result
-    if domain_name not in domains:
+            domains.append({"ip" :domain['ip'],"custom" : True})
+    try:
+        result = dns.resolver.query(domain_name)
+        for ip in result:
+            domains.append({"ip" :ip.address,"custom" : False})
+    except:
+        pass
+    if domain_name not in rr_dict.keys() and len(domains) != 0:
+        returned_ip = domains[0]
+        rr_dict[domain_name] = returned_ip
+        returned_ip['domain'] = domain_name
+        return make_response(returned_ip, 200)
+    elif len(domains) == 0:
         return abort(404, 'El dominio no fue encontrado')
+    else:
+        return_next = False
+        for ip_dict in domains:
+            if rr_dict[domain_name]['ip'] == ip_dict['ip'] \
+                and  rr_dict[domain_name]["custom"] == ip_dict["custom"]:
+                return_next = True
+            elif return_next:
+                rr_dict[domain_name] = ip_dict
+                ip_dict['domain'] = domain_name
+                return make_response(ip_dict, 200)
+        returned_ip = domains[0]
+        rr_dict[domain_name] = returned_ip
+        returned_ip['domain'] = domain_name
+        return make_response(returned_ip, 200)
 
-    return alumnos.get(id_alumno)
 
 def create(**kwargs):
     """
-    Esta funcion maneja el request POST /api/alumnos
+    Esta funcion maneja el request POST /api/custom-domains/
 
-     :param body:  alumno a crear en la lista de alumnos
-    :return:        201 alumno creado, 400 dni o padron duplicado
+     :param body:  dominio a crear en la lista de custom-domains
+    :return:        201 dominio creado, 400 dominio duplicado
     """
-    alumno = kwargs.get('body')
-    dni = alumno.get('dni')
-    padron = alumno.get('padron')
-    nombre = alumno.get('nombre')
-    if not dni or not padron or not nombre:
-        return abort(400, 'Faltan datos para crear un alumno')
+    dominio = kwargs.get('body')
+    ip = dominio.get('ip')
+    domain_name = dominio.get('domain')
+    if not domain_name or not ip:
+        return abort(400, 'custom domain already exists')
 
     dup = False
-    for alumno_existente in alumnos.values():
-        dup = dni == alumno_existente.get('dni') or padron == alumno_existente.get('padron')
+    for domain in custom_domains.values():
+        dup = domain_name == domain.get('domain')
         if dup: break
 
     if dup:
-        return abort(400, 'DNI o Padron ya existentes')
+        return abort(400, 'custom domain already exists')
 
-    new_id = max(alumnos.keys()) + 1
-    alumno['id'] = new_id
-    alumnos[new_id] = alumno
+    new_id = max(custom_domains.keys()) + 1
+    custom_domains[new_id] = dominio.copy()
+    custom_domains[new_id]['custom'] = True
+    return make_response(dominio, 201)
 
-    return make_response(alumno, 201)
-
-def delete(id_alumno):
+def delete(domain_name):
     """
-    Esta funcion maneja el request DELETE /api/alumnos/{id_alumno}
+    Esta funcion maneja el request DELETE /api/custom-domains/{domain_name}
 
-    :id_alumno body:  id del alumno que se quiere borrar
-    :return:        200 alumno, 404 alumno no encontrado
+     :domain_name path:  nombre del dominio que se quiere borrar
+    :return:        200 dominio borrado, 404 dominio no encontrado
     """
-    if id_alumno not in alumnos:
-        return abort(404, 'El alumno no fue encontrado')
+    exists = False
+    for key, domain in custom_domains.items():
+        exists = domain_name == domain.get('domain')
+        id = key
+        if exists: break
+    if not exists:
+        return abort(404, 'domain not found')
 
-    del alumnos[id_alumno]
+    del custom_domains[id]
+    return make_response({'domain' : domain_name}, 200)
 
-    return make_response('', 204)
-
-def edit(id_alumno):
+def edit(**kwargs):
     """
-    Esta funcion maneja el request DELETE /api/alumnos/{id_alumno}
+    Esta funcion maneja el request PUT /api/custom-domains/
 
-    :id_alumno body:  id del alumno que se quiere borrar
-    :return:        200 alumno, 404 alumno no encontrado
+    :param body:  id del dominio que se quiere modificar
+    :return:        200 dominio modificado, 404 dominio no encontrado
     """
-    if id_alumno not in alumnos:
-        return abort(404, 'El alumno no fue encontrado')
+    dominio = kwargs.get('body')
+    ip = dominio.get('ip')
+    domain_name = dominio.get('domain')
+    if not domain_name or not ip:
+        return abort(400, 'payload is invalid')
 
-    del alumnos[id_alumno]
+    exists = False
+    for key, domain in custom_domains.items():
+        exists = domain_name == domain.get('domain')
+        id = key
+        if exists: break
+    if not exists:
+        return abort(404, 'domain not found')
 
-    return make_response('', 204)
+    custom_domains[id]['ip'] = ip
+    return make_response({'domain':dominio['domain'],'ip':dominio['ip'],'custom':True}, 200)
