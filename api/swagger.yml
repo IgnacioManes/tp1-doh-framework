@@ -80,12 +80,21 @@ paths:
                 $ref: '#/components/schemas/Domain'
         400:
           description: "Dominio duplicado"
+
+  /custom-domains/{domain_name}:
     put:
       operationId: "api.domains.edit"
       tags:
         - "Domains"
       summary: "Modificar dominio personalizado"
       description: "modifica un dominio personalizado"
+      parameters:
+        - in: path
+          name: domain_name
+          required: true
+          schema:
+            type: string
+          description: Nombre del dominio a obtener
       requestBody:
         required: true
         x-body-name: 'dominio'
@@ -98,7 +107,7 @@ paths:
           description: "Se ha modificado el dominio exitosamente"
         404:
           description: "Dominio no encontrado"
-  /custom-domains/{domain_name}:
+
     delete:
       operationId: "api.domains.delete"
       tags:

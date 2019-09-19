@@ -118,17 +118,19 @@ def delete(domain_name):
     del custom_domains[id]
     return make_response({'domain' : domain_name}, 200)
 
-def edit(**kwargs):
+def edit(domain_name, **kwargs):
     """
-    Esta funcion maneja el request PUT /api/custom-domains/
+    Esta funcion maneja el request PUT /api/custom-domains/{domain_name}
 
+    :domain_name path:  nombre del dominio que se quiere editar
     :param body:  id del dominio que se quiere modificar
     :return:        200 dominio modificado, 404 dominio no encontrado
     """
     dominio = kwargs.get('body')
+    body_domain_name = dominio.get('domain')
     ip = dominio.get('ip')
-    domain_name = dominio.get('domain')
-    if not domain_name or not ip:
+
+    if not domain_name or not ip or domain_name != body_domain_name:
         return abort(400, 'payload is invalid')
 
     exists = False
