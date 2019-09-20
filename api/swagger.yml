@@ -16,8 +16,8 @@ paths:
       operationId: "api.domains.get_one"
       tags:
         - "Domains"
-      summary: "Alumno de la materia"
-      description: "Obtiene una ip relacionada a un dominio particular especificando si es o no custom"
+      summary: "Pedido de IP de un dominio"
+      description: "Obtiene una ip relacionada a un dominio particular, especificando si es o no custom"
       parameters:
         - in: path
           name: domain_name

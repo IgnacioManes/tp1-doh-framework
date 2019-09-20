@@ -11,6 +11,13 @@ custom_domains = {
 
 rr_dict = {}
 
+def do_error(http_code, message):
+    error_struct = {
+        "error": message
+    }
+
+    return make_response(error_struct, http_code)
+
 # Create a handler for our read (GET) domains
 def get(q=""):
     """
@@ -57,7 +64,7 @@ def get_one(domain_name):
         returned_ip['domain'] = domain_name
         return make_response(returned_ip, 200)
     elif len(domains) == 0:
-        return abort(404, 'domain not found')
+        return do_error(404, 'domain not found')
     else:
         return_next = False
         for ip_dict in domains:
@@ -85,7 +92,7 @@ def create(**kwargs):
     ip = dominio.get('ip')
     domain_name = dominio.get('domain')
     if not domain_name or not ip:
-        return abort(400, 'custom domain already exists')
+        return do_error(400, 'custom domain already exists')
 
     dup = False
     for domain in custom_domains.values():
@@ -93,7 +100,7 @@ def create(**kwargs):
         if dup: break
 
     if dup:
-        return abort(400, 'custom domain already exists')
+        return do_error(400, 'custom domain already exists')
 
     new_id = max(custom_domains.keys()) + 1
     custom_domains[new_id] = dominio.copy()
@@ -113,7 +120,7 @@ def delete(domain_name):
         id = key
         if exists: break
     if not exists:
-        return abort(404, 'domain not found')
+        return do_error(404, 'domain not found')
 
     del custom_domains[id]
     return make_response({'domain' : domain_name}, 200)
@@ -131,7 +138,7 @@ def edit(domain_name, **kwargs):
     ip = dominio.get('ip')
 
     if not domain_name or not ip or domain_name != body_domain_name:
-        return abort(400, 'payload is invalid')
+        return do_error(400, 'payload is invalid')
 
     exists = False
     for key, domain in custom_domains.items():
@@ -139,7 +146,7 @@ def edit(domain_name, **kwargs):
         id = key
         if exists: break
     if not exists:
-        return abort(404, 'domain not found')
+        return do_error(404, 'domain not found')
 
     custom_domains[id]['ip'] = ip
     return make_response({'domain':dominio['domain'],'ip':dominio['ip'],'custom':True}, 200)
