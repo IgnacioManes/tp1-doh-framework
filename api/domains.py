@@ -57,7 +57,7 @@ def get_one(domain_name):
         returned_ip['domain'] = domain_name
         return make_response(returned_ip, 200)
     elif len(domains) == 0:
-        return abort(404, 'El dominio no fue encontrado')
+        return abort(404, 'domain not found')
     else:
         return_next = False
         for ip_dict in domains:
